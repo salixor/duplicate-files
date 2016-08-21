@@ -1,10 +1,12 @@
 import os
+import sys
 import time
 import hashlib
 
 
-# The absolute path to the directory where duplicate files have to be checked for
-path = ""
+# Arguments used to run the program
+path = "" # Absolute path to the directory
+delete = False # Sets whether the program will delete the duplicate files or not
 
 
 def CompareSizes(f1_name, f2_name):
@@ -42,18 +44,20 @@ for (dirpath, dirnames, filenames) in os.walk(path):
     f.extend(filenames)
     break
 
+filesnb = len(f) # Number of files
+totalit = ( filesnb*(filesnb-1) ) / 2 # Final number of iterations
+count = 0 # Keeps track of the progress (number of iterations done)
 
-initial_time = time.clock() # Time at which the comparison begins
+initial_time = time.clock() # Time at which the program begins
 
 for i, file1 in enumerate(f):
-    print("\nFile "+str(i+1)+"/"+str(len(f))+"\n")
     buff = [] # We reset the buffer at each loop
 
     for j, file2 in enumerate(f):
         if i >= j: # We skip the checks that have already happened
             continue
 
-        print("> File "+str(j+1)+"/"+str(len(f)))
+        count += 1
         f1_name = path+file1
         f2_name = path+file2
 
@@ -66,24 +70,37 @@ for i, file1 in enumerate(f):
             l.append( (file1, file2) )
             buff.append(file2)
 
-    # We remove duplicates from the files array
+    # We remove the names of duplicate files from the files array
     for rem in buff:
         f.remove(rem)
+        filesnb = len(f)
+        totalit -= (filesnb-i-1)
 
-final_time = time.clock() # Time at which the comparison ends
+    # Display of the current progress
+    print("Progress : "+str( int( round( float(count)/totalit*100 ) ) )+"%")
 
 
 # Display of the names of duplicate files
 if(len(l) > 0):
     print("\n\nSome duplicate files were found :")
     for index, duo in enumerate(l):
-        print("\n\tDuplicate "+ str(index+1))
-        print("\t > "+duo[0])
+        print("\n\tDuplicate of "+duo[0]+" :")
         print("\t > "+duo[1])
 else:
-    print("\n\nNo duplicates.\n")
+    print("\n\nNo duplicate files were found.")
+
+
+# Proceeds to the deletion of duplicate files (is delete is True)
+if delete and len(l) > 0:
+    print("\n")
+    for fname in l:
+        print("Deleted "+path+fname[1]+".")
+        os.remove(path+fname[1])
+
+final_time = time.clock() # Time at which the program ends
+
 
 # Display of the execution time
-print("\nThe program ran in "+str(final_time - initial_time)+" milliseconds.\n")
+print("\nThe program ran in "+str(int(round((final_time - initial_time)*1000)))+"ms.\n")
 
-raw_input("Press a key to end the program ...")
+raw_input("Press a key to exit the program ...")
